@@ -1,0 +1,22 @@
+{
+  "name": "@repo/redis",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "exports": {
+    "./client": "./index.ts",
+    "./cache": "./cache.ts",
+    "./pubsub": "./pubsub.ts",
+    "./queue": "./queue.ts"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "bullmq": "^6.3.0",
+    "ioredis": "^6.0.0"
+  }
+}

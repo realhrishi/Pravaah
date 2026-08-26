@@ -1,0 +1,236 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+
+// enums
+
+enum Role {
+  AUTHORITY
+  ADMIN
+}
+
+enum RiskClass {
+  GREEN
+  WATCH
+  WARNING
+  CRITICAL
+}
+
+enum SensorType {
+  RAIN
+  SOIL_MOISTURE
+  WATER_LEVEL
+}
+
+enum SensorStatus {
+  ONLINE
+  STALE
+  OFFLINE
+}
+
+enum AlertChannel {
+  WHATSAPP
+  SMS
+  SACHET
+}
+
+enum TriggerType {
+  SCHEDULED
+  SENSOR_THRESHOLD
+  MANUAL
+  ADAPTIVE
+}
+
+// auth — authority only
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         Role     @default(AUTHORITY)
+
+  acknowledgedAlerts Alert[] @relation("AcknowledgedBy")
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// citizen — no account, just phone + village
+
+model Subscriber {
+  id               String       @id @default(cuid())
+  villageId        String       @map("village_id")
+  village          Village      @relation(fields: [villageId], references: [villageId])
+
+  phone            String
+  preferredChannel AlertChannel @default(WHATSAPP) @map("preferred_channel")
+
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  @@unique([villageId, phone])
+  @@index([villageId])
+  @@map("subscribers")
+}
+
+// geography — seeded once
+
+model Watershed {
+  watershedId String   @id @map("watershed_id")
+  name        String
+
+  villages    Village[]
+  shelters    Shelter[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("watersheds")
+}
+
+model Village {
+  villageId            String    @id @map("village_id")
+  watershedId          String    @map("watershed_id")
+  watershed            Watershed @relation(fields: [watershedId], references: [watershedId])
+
+  name                 String
+  population           Int?
+
+  elevationM           Float?    @map("elevation_m")
+  slopeDeg             Float?    @map("slope_deg")
+  aspectDeg            Float?    @map("aspect_deg")
+  twi                  Float?
+  spi                  Float?
+  flowAccumulation     Float?    @map("flow_accumulation")
+  distanceToStreamM    Float?    @map("distance_to_stream_m")
+  landCoverClass       String?   @map("land_cover_class")
+  historicalEventFreq  Float?    @map("historical_event_freq")
+  rainfallCellId       String?   @map("rainfall_cell_id")
+
+  sensors              Sensor[]
+  riskSnapshots        RiskSnapshot[]
+  alerts               Alert[]
+  subscribers          Subscriber[]
+
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  @@index([watershedId])
+  @@map("villages")
+}
+
+model Shelter {
+  shelterId   String     @id @map("shelter_id")
+  watershedId String     @map("watershed_id")
+  watershed   Watershed  @relation(fields: [watershedId], references: [watershedId])
+
+  name        String
+  lat         Float
+  lon         Float
+  capacity    Int?
+
+  alerts      Alert[]
+
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  @@index([watershedId])
+  @@map("shelters")
+}
+
+// sensors
+
+model Sensor {
+  sensorId    String        @id @map("sensor_id")
+  villageId   String        @map("village_id")
+  village     Village       @relation(fields: [villageId], references: [villageId])
+
+  sensorType  SensorType    @map("sensor_type")
+  lat         Float
+  lon         Float
+  status      SensorStatus  @default(OFFLINE)
+  lastSeen    DateTime?     @map("last_seen")
+
+  readings    SensorReading[]
+
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  @@index([villageId])
+  @@map("sensors")
+}
+
+model SensorReading {
+  id          Int      @id @default(autoincrement())
+  sensorId    String   @map("sensor_id")
+  sensor      Sensor   @relation(fields: [sensorId], references: [sensorId])
+
+  value       Float
+  recordedAt  DateTime @map("recorded_at")
+
+  @@index([sensorId, recordedAt])
+  @@map("sensor_readings")
+}
+
+// risk — full history
+
+model RiskSnapshot {
+  id                        Int         @id @default(autoincrement())
+  villageId                 String      @map("village_id")
+  village                   Village     @relation(fields: [villageId], references: [villageId])
+
+  probability               Float
+  riskClass                 RiskClass   @map("risk_class")
+  confidence                Float
+  estimatedLeadTimeMinutes  Float?      @map("estimated_lead_time_minutes")
+  modelVersion              String      @map("model_version")
+  triggerType               TriggerType @default(SCHEDULED) @map("trigger_type")
+
+  computedAt                DateTime    @default(now()) @map("computed_at")
+
+  @@index([villageId, computedAt])
+  @@map("risk_snapshots")
+}
+
+// alerts — escalation only
+
+model Alert {
+  id                Int            @id @default(autoincrement())
+
+  villageId         String         @map("village_id")
+  village           Village        @relation(fields: [villageId], references: [villageId])
+
+  riskClass         RiskClass      @map("risk_class")
+  previousClass     RiskClass?     @map("previous_class")
+  leadTimeMinutes   Float?         @map("lead_time_minutes")
+  recommendedAction String?        @map("recommended_action")
+
+  shelterId         String?        @map("shelter_id")
+  shelter           Shelter?       @relation(fields: [shelterId], references: [shelterId])
+  routeGeoJson      Json?          @map("route_geojson")
+
+  channels          AlertChannel[]
+  dispatched        Boolean        @default(false)
+  dispatchedAt      DateTime?      @map("dispatched_at")
+
+  acknowledged      Boolean        @default(false)
+  acknowledgedById  String?        @map("acknowledged_by_id")
+  acknowledgedBy    User?          @relation("AcknowledgedBy", fields: [acknowledgedById], references: [id])
+  acknowledgedAt    DateTime?      @map("acknowledged_at")
+
+  createdAt         DateTime       @default(now()) @map("created_at")
+
+  @@index([villageId, createdAt])
+  @@map("alerts")
+}

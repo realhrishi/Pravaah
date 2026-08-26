@@ -1,0 +1,40 @@
+# --- Bun / Node ---
+node_modules/
+dist/
+build/
+*.log
+.DS_Store
+
+# --- Env files (never commit real secrets) ---
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# --- Next.js (apps/web) ---
+apps/web/.next/
+apps/web/out/
+
+# --- Prisma (packages/db) ---
+packages/db/generated/
+
+# --- Python (apps/ml-service, scripts/gis-seed) ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# --- Large geodata files — do NOT commit these, download fresh instead ---
+*.tif
+*.tiff
+*.geojson
+*.parquet
+!**/sample-data/*.geojson
+
+# --- IDE ---
+.vscode/
+.idea/
+
+# --- Docker ---
+docker-compose.override.yml
