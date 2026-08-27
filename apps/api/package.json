@@ -14,6 +14,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "@repo/redis": "*",
-    "@repo/database": "*"
+    "@repo/database": "*",
+    "@repo/shared-types": "*"
   }
 }

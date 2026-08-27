@@ -1,18 +1,15 @@
 {
-  "name": "workers",
+  "name": "@repo/shared-types",
   "module": "index.ts",
   "type": "module",
   "private": true,
   "devDependencies": {
     "@types/bun": "latest"
   },
+  "exports": {
+    ".": "./index.ts"
+  },
   "peerDependencies": {
     "typescript": "^5"
-  },
-  "dependencies": {
-    "bullmq": "^6.3.0",
-    "@repo/redis": "*",
-    "@repo/database": "*",
-    "@repo/shared-types": "*"
   }
 }

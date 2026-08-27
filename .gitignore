@@ -15,8 +15,8 @@ build/
 apps/web/.next/
 apps/web/out/
 
-# --- Prisma (packages/db) ---
-packages/db/generated/
+# --- Prisma (packages/database) ---
+packages/database/generated/
 
 # --- Python (apps/ml-service, scripts/gis-seed) ---
 __pycache__/
@@ -38,3 +38,5 @@ venv/
 
 # --- Docker ---
 docker-compose.override.yml
+
+.claude

@@ -119,6 +119,7 @@ model Village {
   landCoverClass       String?   @map("land_cover_class")
   historicalEventFreq  Float?    @map("historical_event_freq")
   rainfallCellId       String?   @map("rainfall_cell_id")
+  boundaryGeoJson      Json?     @map("boundary_geojson")
 
   sensors              Sensor[]
   riskSnapshots        RiskSnapshot[]
