@@ -10,9 +10,10 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "bullmq": "^6.3.0",
-    "@repo/redis": "*",
     "@repo/database": "*",
-    "@repo/shared-types": "*"
+    "@repo/redis": "*",
+    "@repo/shared-types": "*",
+    "axios": "^1.20.0",
+    "bullmq": "^6.3.0"
   }
 }
