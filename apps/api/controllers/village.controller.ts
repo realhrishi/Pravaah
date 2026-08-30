@@ -27,6 +27,26 @@ export async function getVillage(
   }
 }
 
+function normalizeRisk(raw: any): {
+  probability: number;
+  riskClass: string;
+  confidence: number;
+  estimatedLeadTimeMinutes: number | null;
+  modelVersion: string;
+  computedAt: string;
+} | null {
+  if (!raw) return null;
+  return {
+    probability: raw.probability,
+    riskClass: raw.riskClass ?? raw.risk_class,
+    confidence: raw.confidence,
+    estimatedLeadTimeMinutes:
+      raw.estimatedLeadTimeMinutes ?? raw.estimated_lead_time_minutes ?? null,
+    modelVersion: raw.modelVersion ?? raw.model_version,
+    computedAt: raw.computedAt ?? raw.timestamp,
+  };
+}
+ 
 export async function getVillageRisk(
   req: Request,
   res: Response,
@@ -37,10 +57,12 @@ export async function getVillageRisk(
     if (!villageId) {
       return res.status(400).json({ error: "Invalid village ID" });
     }
-
+ 
     const cached = await getCachedRisk(villageId);
-    if (cached) return res.json(cached);
-
+    if (cached) {
+      return res.status(200).json({ success: true, data: normalizeRisk(cached) });
+    }
+ 
     const latest = await prisma.riskSnapshot.findFirst({
       where: { villageId },
       orderBy: { computedAt: "desc" },
@@ -49,7 +71,8 @@ export async function getVillageRisk(
       return res
         .status(404)
         .json({ success: false, message: "No risk data yet for this village" });
-    res.status(200).json({ success: true, data: latest  });
+ 
+    res.status(200).json({ success: true, data: normalizeRisk(latest) });
   } catch (error) {
     next(error);
   }

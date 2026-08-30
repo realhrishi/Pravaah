@@ -28,6 +28,7 @@ export async function getWatershed(
     }
     const watershed = await prisma.watershed.findUnique({
       where: { watershedId },
+      include: {shelters: true},
     });
     if (!watershed)
       return res.status(404).json({ success: false, message: "Watershed not found" });
@@ -39,6 +40,26 @@ export async function getWatershed(
 
 // The main dashboard-map endpoint — villages + their current cached
 // risk in one call, exactly what the authority map needs on load.
+function normalizeRisk(raw: any): {
+  probability: number;
+  riskClass: string;
+  confidence: number;
+  estimatedLeadTimeMinutes: number | null;
+  modelVersion: string;
+  computedAt: string;
+} | null {
+  if (!raw) return null;
+  return {
+    probability: raw.probability,
+    riskClass: raw.riskClass ?? raw.risk_class,
+    confidence: raw.confidence,
+    estimatedLeadTimeMinutes:
+      raw.estimatedLeadTimeMinutes ?? raw.estimated_lead_time_minutes ?? null,
+    modelVersion: raw.modelVersion ?? raw.model_version,
+    computedAt: raw.computedAt ?? raw.timestamp,
+  };
+}
+ 
 export async function getWatershedVillages(
   req: Request,
   res: Response,
@@ -49,18 +70,39 @@ export async function getWatershedVillages(
     if (!watershedId) {
       return res.status(400).json({ error: "Invalid watershed ID" });
     }
-
+ 
     const villages = await prisma.village.findMany({
       where: { watershedId },
     });
-
-    const villagesWithRisk = await Promise.all(
-      villages.map(async (village) => {
-        const cachedRisk = await getCachedRisk(village.villageId);
-        return { ...village, currentRisk: cachedRisk ?? null };
-      }),
+ 
+    const cacheResults = await Promise.all(
+      villages.map((v) => getCachedRisk(v.villageId)),
     );
-
+ 
+    const missedIds = villages
+      .filter((_, i) => !cacheResults[i])
+      .map((v) => v.villageId);
+ 
+    let dbFallbackByVillageId: Record<string, any> = {};
+    if (missedIds.length > 0) {
+      const snapshots = await prisma.riskSnapshot.findMany({
+        where: { villageId: { in: missedIds } },
+        orderBy: { computedAt: "desc" },
+      });
+      for (const snap of snapshots) {
+        if (!dbFallbackByVillageId[snap.villageId]) {
+          dbFallbackByVillageId[snap.villageId] = snap;
+        }
+      }
+    }
+ 
+    const villagesWithRisk = villages.map((village, i) => ({
+      ...village,
+      currentRisk: normalizeRisk(
+        cacheResults[i] ?? dbFallbackByVillageId[village.villageId] ?? null,
+      ),
+    }));
+ 
     res.status(200).json({ success: true, data: villagesWithRisk });
   } catch (error) {
     next(error);

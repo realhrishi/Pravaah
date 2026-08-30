@@ -67,7 +67,7 @@ async function seedSubscribers() {
     await prisma.subscriber.upsert({
       where: { villageId_phone: { villageId: s.villageId, phone: s.phone } },
       update: {},
-      create: { ...s, preferredChannel: "WHATSAPP" },
+      create: { ...s, preferredChannel: ["WHATSAPP"] },
     });
     console.log(`subscriber: ${s.phone} → ${s.villageId}`);
   }

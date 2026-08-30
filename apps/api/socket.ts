@@ -5,12 +5,11 @@ import { prisma } from "@repo/database/client";
 
 export function initSocket(httpServer: HTTPServer) {
   const io = new SocketIOServer(httpServer, {
-    cors: { origin: "*" }, 
+    cors: { origin: "*" },
   });
 
   io.on("connection", (socket) => {
     console.log(`[socket] connected: ${socket.id}`);
-
 
     socket.on("join:watershed", (watershedId: string) => {
       socket.join(`watershed:${watershedId}`);
@@ -26,7 +25,6 @@ export function initSocket(httpServer: HTTPServer) {
     });
   });
 
-
   const subscriber = createSubscriber();
   subscriber.psubscribe("risk:*", "alert:*", "sensor:*");
 
@@ -41,7 +39,10 @@ export function initSocket(httpServer: HTTPServer) {
           select: { watershedId: true },
         });
         if (village) {
-          io.to(`watershed:${village.watershedId}`).emit("risk:update", payload);
+          io.to(`watershed:${village.watershedId}`).emit(
+            "risk:update",
+            payload,
+          );
         }
       }
 
@@ -53,6 +54,7 @@ export function initSocket(httpServer: HTTPServer) {
         if (village) {
           io.to(`watershed:${village.watershedId}`).emit("alert:new", payload);
         }
+        io.emit("alert:broadcast", payload);
       }
 
       if (eventType === "sensor") {

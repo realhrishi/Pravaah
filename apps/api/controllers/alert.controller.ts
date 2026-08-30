@@ -11,7 +11,11 @@ export async function getAlerts(
     const alerts = await prisma.alert.findMany({
       orderBy: { createdAt: "desc" },
       take: 100,
-      include: { village: true, shelter: true },
+      include: {
+        village: true,
+        shelter: true,
+        acknowledgedBy: { select: { id: true, name: true, email: true, role: true } },
+      },
     });
     res.status(200).json({ success: true, data: alerts });
   } catch (error) {
@@ -30,7 +34,11 @@ export async function getAlert(
 
     const alert = await prisma.alert.findUnique({
       where: { id },
-      include: { village: true, shelter: true },
+      include: {
+        village: true,
+        shelter: true,
+        acknowledgedBy: { select: { id: true, name: true, email: true, role: true } },
+      },
     });
     if (!alert) return res.status(404).json({ success: false, message: "Alert not found" });
     res.status(200).json({ success: true, data: alert });
@@ -54,6 +62,13 @@ export async function acknowledgeAlert(
         acknowledged: true,
         acknowledgedById: req.user!.userId,
         acknowledgedAt: new Date(),
+      },
+      include: {
+        village: true,
+        shelter: true,
+        acknowledgedBy: {
+          select: { id: true, name: true, email: true, role: true },
+        },
       },
     });
     res.status(200).json({ success: true, data: alert });

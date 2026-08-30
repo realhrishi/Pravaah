@@ -12,6 +12,8 @@ import watershedRouter from "./routes/watershed.route";
 import villageRouter from "./routes/village.route";
 import riskRouter from "./routes/risk.route";
 import alertRouter from "./routes/alert.route";
+import adminRouter from "./routes/admin.route";
+import subscriberRouter from "./routes/subscriber.routes";
 
 import { initSocket } from "./socket";
 
@@ -22,9 +24,7 @@ const httpServer = createServer(app);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({
-  origin: "*",
-}));
+app.use(cors());
 
 app.get("/health", checkHealth);
 app.use("/api/auth", authRouter);
@@ -33,8 +33,8 @@ app.use("/api/villages", villageRouter);
 app.use("/api/risk", riskRouter);
 app.use("/api/sensors", sensorRouter);
 app.use("/api/alerts", alertRouter);
-
-
+app.use("/api/admin", adminRouter);
+app.use("/api/subscribers", subscriberRouter);
 
 app.use((err :any , req :Request, res:Response, next:NextFunction) => {
   console.error(err.stack);

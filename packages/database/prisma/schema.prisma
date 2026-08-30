@@ -78,7 +78,7 @@ model Subscriber {
   village          Village      @relation(fields: [villageId], references: [villageId])
 
   phone            String
-  preferredChannel AlertChannel @default(WHATSAPP) @map("preferred_channel")
+  preferredChannel AlertChannel[] @default([SMS]) @map("preferred_channel")
 
   createdAt        DateTime     @default(now()) @map("created_at")
 

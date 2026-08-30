@@ -54,7 +54,7 @@ const riskWorker = new Worker(
     );
 
     if (previousClass && isEscalation(previousClass, prediction.risk_class)) {
-      const alert = await prisma.alert.create({
+      const createAlert = await prisma.alert.create({
         data: {
           villageId,
           riskClass: prediction.risk_class,
@@ -63,8 +63,13 @@ const riskWorker = new Worker(
           channels: ["WHATSAPP", "SMS"],
         },
       });
+
+      const alert = await prisma.alert.findUniqueOrThrow({
+        where: { id: createAlert.id },
+        include: { village: true, shelter: true },
+      });
       await publishAlert(villageId, alert);
-      await enqueueDispatch(alert.id);
+      await enqueueDispatch(createAlert.id);
       console.log(
         `[worker] ESCALATION: ${villageId} ${previousClass} → ${prediction.risk_class}, alert created`,
       );

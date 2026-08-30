@@ -77,6 +77,10 @@ export async function listSensors(
     const watershedId = req.query.watershedId as string | undefined;
     const sensors = await prisma.sensor.findMany({
       where: watershedId ? { village: { watershedId } } : undefined,
+      include: {
+        village: { select: { villageId: true, name: true } },
+        readings: { orderBy: { recordedAt: "desc" }, take: 1 },
+      },
     });
     res.status(200).json({ success: true, data: sensors });
   } catch (error) {
