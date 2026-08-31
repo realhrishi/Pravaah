@@ -10,12 +10,14 @@
     "./client": "./index.ts",
     "./cache": "./cache.ts",
     "./pubsub": "./pubsub.ts",
-    "./queue": "./queue.ts"
+    "./queue": "./queue.ts",
+    "./openMeteo": "./openMeteo.ts"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "axios": "^1.20.0",
     "bullmq": "^6.3.0",
     "ioredis": "^6.0.0"
   }

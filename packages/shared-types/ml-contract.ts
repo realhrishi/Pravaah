@@ -1,6 +1,3 @@
-
-
-
 export const RISK_CLASSES = ["GREEN", "WATCH", "WARNING", "CRITICAL"] as const;
 export type RiskClass = (typeof RISK_CLASSES)[number];
 
@@ -11,11 +8,22 @@ export const RISK_CLASS_ORDER: Record<RiskClass, number> = {
   CRITICAL: 3,
 };
 
+export function normalizeRiskPayload<
+  T extends { risk_class?: RiskClass; riskClass?: RiskClass },
+>(payload: T): T & { riskClass: RiskClass; risk_class: RiskClass } {
+  const riskClass = (payload.riskClass ??
+    payload.risk_class ??
+    "GREEN") as RiskClass;
+  return {
+    ...payload,
+    riskClass,
+    risk_class: riskClass,
+  };
+}
 
 export function isEscalation(prev: RiskClass, next: RiskClass): boolean {
   return RISK_CLASS_ORDER[next] > RISK_CLASS_ORDER[prev];
 }
-
 
 export const FEATURE_NAMES = [
   // dynamic — rainfall (from rain sensors / rainfall grid cell)
@@ -44,9 +52,7 @@ export const FEATURE_NAMES = [
 
 export type FeatureName = (typeof FEATURE_NAMES)[number];
 
-
 export type FeatureVector = Record<FeatureName, number>;
-
 
 export const LAND_COVER_ENCODING = {
   unknown: 0,
@@ -82,7 +88,6 @@ export interface FeatureDriver {
   contribution: number;
   direction: DriverDirection;
 }
-
 
 export interface ExplainRequest {
   village_id: string;

@@ -1,5 +1,6 @@
 import { prisma } from "@repo/database/client";
 import { scheduleBaselinePolling } from "@repo/redis/queue";
+import { scheduleSensorHealthChecks } from ".";
 
 async function main() {
   const villages = await prisma.village.findMany({
@@ -8,6 +9,7 @@ async function main() {
 
   console.log(`Scheduling baseline 15-min polling for ${villages.length} villages...`);
   await scheduleBaselinePolling(villages.map((v) => v.villageId));
+  await scheduleSensorHealthChecks();
   console.log("Done. These jobs now run every 15 minutes automatically.");
 
   process.exit(0);

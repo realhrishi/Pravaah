@@ -1,11 +1,11 @@
-
 import type { RiskClass, RiskSnapshot } from "./api";
 
 export interface RiskUpdatePayload {
   village_id: string;
   timestamp: string;
   probability: number;
-  risk_class: RiskClass;
+  riskClass?: RiskClass;
+  risk_class?: RiskClass;
   confidence: number;
   estimated_lead_time_minutes: number | null;
   model_version: string;

@@ -58,15 +58,31 @@ export default function MapPage() {
 
   useEffect(() => {
     if (!latestRisk) return;
+    const riskClass = latestRisk.riskClass ?? latestRisk.risk_class ?? "GREEN";
+    const normalizedRisk = {
+      ...latestRisk,
+      id: 0,
+      villageId: latestRisk.village_id,
+      riskClass,
+      risk_class: riskClass,
+      confidence: latestRisk.confidence ?? 0,
+      estimatedLeadTimeMinutes: latestRisk.estimated_lead_time_minutes ?? null,
+      modelVersion: latestRisk.model_version ?? "unknown",
+      computedAt: latestRisk.timestamp ?? new Date().toISOString(),
+      triggerType: "AUTO",
+    } as unknown as RiskSnapshot;
+
     setVillages((prev) =>
       prev.map((v) =>
         v.villageId === latestRisk.village_id
-          ? { ...v, currentRisk: latestRisk as any }
+          ? { ...v, currentRisk: normalizedRisk }
           : v,
       ),
     );
     setRisk((prev) =>
-      selectedVillage?.villageId === latestRisk.village_id ? latestRisk as any : prev,
+      selectedVillage?.villageId === latestRisk.village_id
+        ? normalizedRisk
+        : prev,
     );
   }, [latestRisk, selectedVillage]);
 

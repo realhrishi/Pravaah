@@ -1,26 +1,20 @@
 import { prisma } from "./index";
 import { LAND_COVER_ENCODING, type FeatureVector } from "@repo/shared-types";
+import { fetchRainfallAndSoil } from "@repo/redis/openMeteo";
 import { isSensorFresh } from "@repo/redis/cache";
 
-export async function buildFeatureVector(villageId: string): Promise<FeatureVector> {
-  const village = await prisma.village.findUniqueOrThrow({ where: { villageId } });
+const DEFAULT_LAND_COVER: keyof typeof LAND_COVER_ENCODING = "forest";
+
+export async function buildFeatureVector(
+  villageId: string,
+): Promise<FeatureVector> {
+  const village = await prisma.village.findUniqueOrThrow({
+    where: { villageId },
+  });
   const sensors = await prisma.sensor.findMany({ where: { villageId } });
 
-  const rainSensor = sensors.find((s) => s.sensorType === "RAIN");
-  const soilSensor = sensors.find((s) => s.sensorType === "SOIL_MOISTURE");
   const waterSensor = sensors.find((s) => s.sensorType === "WATER_LEVEL");
-
   const now = new Date();
-
-  async function sumRainfallSince(hoursAgo: number): Promise<number> {
-    if (!rainSensor) return 0;
-    const since = new Date(now.getTime() - hoursAgo * 60 * 60 * 1000);
-    const result = await prisma.sensorReading.aggregate({
-      where: { sensorId: rainSensor.sensorId, recordedAt: { gte: since } },
-      _sum: { value: true },
-    });
-    return result._sum.value ?? 0;
-  }
 
   async function latestReading(sensorId?: string): Promise<number | null> {
     if (!sensorId) return null;
@@ -31,39 +25,67 @@ export async function buildFeatureVector(villageId: string): Promise<FeatureVect
     return reading?.value ?? null;
   }
 
-  const [rain1h, rain3h, rain6h, rain24h, soilMoisture, waterLevel] = await Promise.all([
-    sumRainfallSince(1),
-    sumRainfallSince(3),
-    sumRainfallSince(6),
-    sumRainfallSince(24),
-    latestReading(soilSensor?.sensorId),
+  const geo = village.boundaryGeoJson as any;
+  const centroid = getCentroid(geo);
+
+  const [waterLevel, rainfallAndSoil] = await Promise.all([
     latestReading(waterSensor?.sensorId),
+    centroid
+      ? fetchRainfallAndSoil(centroid[0], centroid[1]).catch(() => null)
+      : Promise.resolve(null),
   ]);
 
-
-  const freshChecks = await Promise.all(sensors.map((s) => isSensorFresh(s.sensorId)));
+  const freshChecks = await Promise.all(
+    sensors.map((s) => isSensorFresh(s.sensorId)),
+  );
   const sensorConfidence =
-    sensors.length > 0 ? freshChecks.filter(Boolean).length / sensors.length : 0.5;
+    sensors.length > 0
+      ? freshChecks.filter(Boolean).length / sensors.length
+      : 0.5;
 
-  const landCoverLabel = (village.landCoverClass ?? "unknown") as keyof typeof LAND_COVER_ENCODING;
+  const landCoverLabel = (village.landCoverClass ??
+    DEFAULT_LAND_COVER) as keyof typeof LAND_COVER_ENCODING;
 
   return {
-    rainfall_1h_mm: rain1h,
-    rainfall_3h_mm: rain3h,
-    rainfall_6h_mm: rain6h,
-    rainfall_24h_mm: rain24h,
-    rainfall_forecast_mm: 0, 
-    soil_moisture_pct: soilMoisture ?? 40,
+    rainfall_1h_mm: rainfallAndSoil?.rainfall_1h_mm ?? 0,
+    rainfall_3h_mm: rainfallAndSoil?.rainfall_3h_mm ?? 0,
+    rainfall_6h_mm: rainfallAndSoil?.rainfall_6h_mm ?? 0,
+    rainfall_24h_mm: rainfallAndSoil?.rainfall_24h_mm ?? 0,
+    rainfall_forecast_mm: rainfallAndSoil?.rainfall_forecast_mm ?? 0,
+
+    soil_moisture_pct: rainfallAndSoil?.soil_moisture_pct ?? 40, 
+
     elevation_m: village.elevationM ?? 0,
     slope_deg: village.slopeDeg ?? 0,
     aspect_deg: village.aspectDeg ?? 0,
-    twi: 0,
-    spi: 0,
-    flow_accumulation: 0,
-    distance_to_stream_m: 0,
+    twi: village.twi ?? 0,
+    spi: village.spi ?? 0,
+    flow_accumulation: village.flowAccumulation ?? 0,
+    distance_to_stream_m: village.distanceToStreamM ?? 0,
+
     land_cover_class: LAND_COVER_ENCODING[landCoverLabel] ?? 0,
+
     historical_event_freq: village.historicalEventFreq ?? 0,
+
     upstream_water_level_m: waterLevel ?? -1,
     sensor_confidence: sensorConfidence,
   };
+}
+
+function getCentroid(geo: any): [number, number] | null {
+  if (!geo) return null;
+  if (geo.type === "Point") {
+    const [lon, lat] = geo.coordinates;
+    return [lat, lon];
+  }
+  if (geo.type === "Polygon") {
+    const ring = geo.coordinates[0];
+    if (!ring || ring.length === 0) return null;
+    const lat =
+      ring.reduce((s: number, p: number[]) => s + (p[1] ?? 0), 0) / ring.length;
+    const lon =
+      ring.reduce((s: number, p: number[]) => s + (p[0] ?? 0), 0) / ring.length;
+    return [lat, lon];
+  }
+  return null;
 }
