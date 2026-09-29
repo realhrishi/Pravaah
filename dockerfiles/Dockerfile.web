@@ -26,7 +26,7 @@ RUN bun run build
 # --- Runner Stage ---
 FROM node:20-alpine AS runner
 
-WORKDIR /app/apps/web
+WORKDIR /app
 
 RUN apk add --no-cache curl
 
@@ -34,16 +34,16 @@ ENV NODE_ENV=production
 ENV HOSTNAME="0.0.0.0"
 ENV PORT=3000
 
-COPY --from=builder /app/apps/web/node_modules ./node_modules
-COPY --from=builder /app/apps/web/package.json ./package.json
-COPY --from=builder /app/apps/web/.next ./.next
-COPY --from=builder /app/apps/web/public ./public
+# Copy standalone output and static assets
+COPY --from=builder /app/apps/web/public ./apps/web/public
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
 
-RUN ln -sf /app/apps/web/node_modules/next/dist/bin/next /usr/local/bin/next
+WORKDIR /app/apps/web
 
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:3000/ || exit 1
 
-CMD ["node", "./node_modules/next/dist/bin/next", "start", "-p", "3000", "-H", "0.0.0.0"]
+CMD ["node", "server.js"]
