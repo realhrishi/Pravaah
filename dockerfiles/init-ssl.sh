@@ -45,21 +45,35 @@ fi
 echo "✅ Nginx is running on port 80."
 
 # 3. Request real Let's Encrypt certificate
+echo "### Preparing certificate lineage for Certbot..."
+# Remove dummy cert directory so Certbot doesn't abort with 'live directory exists'
+docker compose run --rm --entrypoint "\
+  sh -c 'rm -rf /etc/letsencrypt/live/$DOMAIN /etc/letsencrypt/archive/$DOMAIN /etc/letsencrypt/renewal/$DOMAIN.conf'" certbot
+
 echo "### Requesting Let's Encrypt certificate for $DOMAIN..."
 STAGING_ARG=""
 if [ "$STAGING" != "0" ]; then
   STAGING_ARG="--staging"
 fi
 
-docker compose run --rm --entrypoint "\
+if ! docker compose run --rm --entrypoint "\
   certbot certonly --webroot -w /var/www/certbot \
     $STAGING_ARG \
     --email $EMAIL \
     -d $DOMAIN \
+    --cert-name $DOMAIN \
     --rsa-key-size 4096 \
     --agree-tos \
-    --non-interactive \
-    --force-renewal" certbot
+    --non-interactive" certbot; then
+  echo "⚠️ Certbot failed. Re-creating temporary fallback certificate so Nginx stays alive..."
+  docker compose run --rm --entrypoint "\
+    sh -c 'mkdir -p /etc/letsencrypt/live/$DOMAIN && \
+           openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+             -keyout /etc/letsencrypt/live/$DOMAIN/privkey.pem \
+             -out /etc/letsencrypt/live/$DOMAIN/fullchain.pem \
+             -subj /CN=localhost'" certbot
+  exit 1
+fi
 
 # 4. Reload Nginx with real certificate
 echo "### Reloading Nginx with new certificate..."
