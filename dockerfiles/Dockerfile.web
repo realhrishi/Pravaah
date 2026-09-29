@@ -3,8 +3,7 @@ FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat
-
+RUN apk add --no-cache libc6-compat nodejs
 
 COPY package.json bun.lock* ./
 COPY apps/web/package.json apps/web/bun.lock* ./apps/web/
@@ -13,9 +12,7 @@ WORKDIR /app/apps/web
 
 RUN bun install
 
-
 COPY apps/web/ ./
-
 
 ARG NEXT_PUBLIC_BACKEND_URL=https://pravaah.ashuttosh.me
 ARG NEXT_PUBLIC_SOCKET_URL=https://pravaah.ashuttosh.me
@@ -24,19 +21,17 @@ ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 ENV NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL
 ENV NODE_ENV=production
 
-
 RUN bun run build
 
-
-FROM oven/bun:1-alpine AS runner
+# --- Runner Stage ---
+FROM node:20-alpine AS runner
 
 WORKDIR /app/apps/web
 
-RUN apk add --no-cache libc6-compat curl
+RUN apk add --no-cache curl
 
 ENV NODE_ENV=production
 ENV PORT=3000
-
 
 COPY --from=builder /app/apps/web/node_modules ./node_modules
 COPY --from=builder /app/apps/web/package.json ./package.json
@@ -45,7 +40,7 @@ COPY --from=builder /app/apps/web/public ./public
 
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD curl -f http://localhost:3000/ || exit 1
 
-CMD ["bun", "run", "start", "--", "-p", "3000", "-H", "0.0.0.0"]
+CMD ["npm", "run", "start", "--", "-p", "3000", "-H", "0.0.0.0"]
