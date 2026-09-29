@@ -31,6 +31,8 @@ venv/
 *.geojson
 *.parquet
 !**/sample-data/*.geojson
+!packages/database/seed-data/**
+!scripts/gis-seed/data/processed/pilot_final_v3.geojson
 
 # --- IDE ---
 .vscode/

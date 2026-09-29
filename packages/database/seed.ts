@@ -104,10 +104,19 @@ async function seedAuthorityUser() {
 }
 
 async function main() {
-  const filePath = path.join(
+  const localSeedPath = path.join(__dirname, "seed-data/pilot_final_v3.geojson");
+  const fallbackPath = path.join(
     __dirname,
     "../../scripts/gis-seed/data/processed/pilot_final_v3.geojson",
   );
+  const filePath = fs.existsSync(localSeedPath)
+    ? localSeedPath
+    : fallbackPath;
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Seed geojson not found at ${localSeedPath} or ${fallbackPath}`);
+  }
+
   const raw = fs.readFileSync(filePath, "utf-8");
   const geojson = JSON.parse(raw);
   const features: VillageFeature[] = geojson.features;
