@@ -1,4 +1,4 @@
-const API_URL = process.env.API_URL || "http://localhost:4000";
+const API_URL = process.env.API_URL || "https://pravaah.ashuttosh.me";
 const TICK_MS = 5000;
 
 interface SensorState {

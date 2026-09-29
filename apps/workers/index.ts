@@ -13,6 +13,7 @@ import { createRedisConnection, enqueueDispatch } from "@repo/redis/client";
 import type { TriggerType } from "@repo/database/client";
 import { dispatchAlertInternal } from "./dispatch";
 import { isSensorFresh } from "@repo/redis/cache";
+import { scheduleBaselinePolling } from "@repo/redis/queue";
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://localhost:8000";
 const riskConnection = createRedisConnection();
@@ -166,3 +167,33 @@ sensorHealthWorker.on("failed", (job, err) =>
 );
 
 console.log("Sensor health check worker running (every 5 min)...");
+
+// Automatically initialize and register 15-minute polling schedulers for all villages
+async function autoSchedule() {
+  try {
+    console.log("[scheduler] Querying villages for baseline polling...");
+    const villages = await prisma.village.findMany({
+      select: { villageId: true },
+    });
+
+    if (villages.length === 0) {
+      console.log("[scheduler] No villages found in database yet. Retrying in 15 seconds...");
+      setTimeout(autoSchedule, 15000);
+      return;
+    }
+
+    console.log(
+      `[scheduler] Registering baseline 15-minute polling for ${villages.length} villages...`,
+    );
+    await scheduleBaselinePolling(villages.map((v) => v.villageId));
+    await scheduleSensorHealthChecks();
+    console.log(
+      `[scheduler] ✅ Baseline 15-min polling active for ${villages.length} villages & 5-min sensor health checks active.`,
+    );
+  } catch (err: any) {
+    console.error("[scheduler] Failed to schedule baseline polling:", err.message);
+    setTimeout(autoSchedule, 30000);
+  }
+}
+
+autoSchedule();

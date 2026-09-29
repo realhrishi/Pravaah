@@ -14,6 +14,10 @@ export async function scheduleBaselinePolling(villageIds: string[]) {
       { every: 15 * 60 * 1000 },
       { name: "risk-inference", data: { villageId, trigger: "SCHEDULED" } }
     );
+    await riskInferenceQueue.add("risk-inference", {
+      villageId,
+      trigger: "SCHEDULED",
+    });
   }
 }
 
