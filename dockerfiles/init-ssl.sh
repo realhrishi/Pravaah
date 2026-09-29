@@ -31,6 +31,12 @@ docker compose run --rm --entrypoint "\
 # 2. Start Nginx to serve the HTTP-01 ACME challenge
 echo "### Starting Nginx..."
 docker compose up -d nginx
+sleep 3
+
+if ! curl -s -o /dev/null http://127.0.0.1/ 2>/dev/null; then
+  echo "⚠️ Warning: Nginx is not responding on http://127.0.0.1/. Checking logs:"
+  docker logs --tail 20 pravaah_nginx
+fi
 
 # 3. Request real Let's Encrypt certificate
 echo "### Requesting Let's Encrypt certificate for $DOMAIN..."
