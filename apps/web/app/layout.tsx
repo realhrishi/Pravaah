@@ -4,7 +4,7 @@ import "./globals.css";
 import { AlertToastListener } from "@/components/AlertToastListener";
 
 export const metadata = {
-  title: "Pravaah — Flash Flood Early Warning",
+  title: "Pravaah",
   description: "Hyper-local flash flood prediction for hilly-region villages",
 };
 
