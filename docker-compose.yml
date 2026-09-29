@@ -187,6 +187,8 @@ services:
     command: sh -c "cd /app/packages/database && bun run seed.ts"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pravaah}?sslmode=disable
+    volumes:
+      - ./scripts:/app/scripts:ro
     depends_on:
       postgres:
         condition: service_healthy

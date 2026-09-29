@@ -7,7 +7,7 @@ RUN apk add --no-cache libc6-compat
 
 
 COPY package.json bun.lock* ./
-COPY apps/web/package.json ./apps/web/
+COPY apps/web/package.json apps/web/bun.lock* ./apps/web/
 
 WORKDIR /app/apps/web
 
