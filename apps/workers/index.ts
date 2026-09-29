@@ -15,7 +15,9 @@ import { dispatchAlertInternal } from "./dispatch";
 import { isSensorFresh } from "@repo/redis/cache";
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://localhost:8000";
-const connection = createRedisConnection();
+const riskConnection = createRedisConnection();
+const dispatchConnection = createRedisConnection();
+const sensorHealthConnection = createRedisConnection();
 
 const riskWorker = new Worker(
   "risk-inference",
@@ -87,7 +89,7 @@ const riskWorker = new Worker(
       );
     }
   },
-  { connection },
+  { connection: riskConnection },
 );
 
 const dispatchWorker = new Worker(
@@ -95,7 +97,7 @@ const dispatchWorker = new Worker(
   async (job) => {
     await dispatchAlertInternal(job.data.alertId);
   },
-  { connection },
+  { connection: dispatchConnection },
 );
 
 riskWorker.on("completed", (job) =>
@@ -153,7 +155,7 @@ const sensorHealthWorker = new Worker(
       }
     }
   },
-  { connection },
+  { connection: sensorHealthConnection },
 );
 
 sensorHealthWorker.on("completed", (job) =>

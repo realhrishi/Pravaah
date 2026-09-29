@@ -10,7 +10,6 @@ const NAV_LINKS = [
   {href:"/alerts", label: "Alerts"},
   { href: "/DosDonts", label: "Do's & Don'ts" },
   { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
 ];
 
 export default function Navbar() {

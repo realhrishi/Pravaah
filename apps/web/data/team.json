@@ -1,0 +1,64 @@
+[
+  {
+    "id": "hrishiraj-chowdhury",
+    "name": "Hrishiraj Chowdhury",
+    "role": "ML Engineer",
+    "bio": "I develop robust machine learning models and intelligent data pipelines to power AI solutions.",
+    "contribution": "Developed the core runoff prediction models, hydrograph simulations, and intelligent data pipelines powering Pravaah's early warning engine.",
+    "image": "/Hrishi.png",
+    "github": "https://github.com/realhrishi",
+    "skills": ["Machine Learning", "Data Pipelines", "Python", "Deep Learning"]
+  },
+  {
+    "id": "ashutosh-sharma",
+    "name": "Ashutosh Sharma",
+    "role": "Full Stack Dev",
+    "bio": "I bridge the gap between server and client sides, delivering scalable and fully integrated web solutions.",
+    "contribution": "Engineered full-stack APIs, backend data models, real-time alert integration, and resilient client-server synchronization across Pravaah.",
+    "image": "/Ashutosh.jpg",
+    "github": "https://github.com/Aa5hut0sh",
+    "skills": ["Full Stack Dev", "Node.js", "Next.js", "APIs & WebSockets"]
+  },
+  {
+    "id": "krishna-m-singh",
+    "name": "Krishna M Singh",
+    "role": "AI Engineer",
+    "bio": "I specialize in deep learning algorithms and building advanced artificial intelligence architectures.",
+    "contribution": "Specialized in deep learning architectures and predictive algorithms for flash flood crest propagation and temporal risk classification.",
+    "image": "/krishna.jpeg",
+    "github": "https://github.com/vvolphh",
+    "skills": ["Deep Learning", "PyTorch", "AI Architecture", "Computer Vision"]
+  },
+  {
+    "id": "akshita-manker",
+    "name": "Akshita Manker",
+    "role": "UI/UX Designer",
+    "bio": "I create intuitive and aesthetically pleasing interfaces that ensure a seamless user experience.",
+    "contribution": "Crafted the accessible emergency visual design system, high-contrast disaster alerts, and user experience tailored for low-bandwidth village access.",
+    "image": "/Akshita.jpg.jpeg",
+    "github": "https://github.com/akshitamanker-creator",
+    "skills": ["UI/UX Design", "Figma", "Design Systems", "User Research"]
+  },
+  
+  {
+    "id": "prasun-kumar",
+    "name": "Prasun Kumar",
+    "role": "Frontend Lead",
+    "bio": "I lead the frontend architecture, focusing on highly responsive and performant web applications.",
+    "contribution": "Architected the Next.js application, interactive risk mapping interfaces, real-time alert toast notifications, and client state orchestration.",
+    "image": "/prasun.jpeg",
+    "github": "https://github.com/Prasun-13",
+    "skills": ["Frontend Architecture", "React", "Next.js", "TypeScript"]
+  },
+  {
+    "id": "poorva-srivastava",
+    "name": "Poorva Srivastava",
+    "role": "Data Engineer",
+    "bio": "I design and maintain large-scale data processing systems to handle complex data workflows.",
+    "contribution": "Designed and maintained high-throughput data processing systems handling real-time IoT river gauge telemetry and weather data streams.",
+    "image": "/poorva.jpeg",
+    "github": "https://github.com/godpoorva",
+    "skills": ["Data Engineering", "ETL Pipelines", "Data Processing", "System Design"]
+  }
+  
+]

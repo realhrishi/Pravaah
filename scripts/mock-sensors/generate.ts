@@ -25,9 +25,7 @@ async function ingest(sensorId: string, value: number) {
   }
 }
 
-// RAIN: posts an INCREMENT (mm since last tick), not an absolute value —
-// this is what gets summed into rainfall_1h/3h/6h/24h_mm, so the scale
-// has to be physically real: intensity (mm/hr) converted to a per-tick delta.
+
 function nextRainDelta(state: SensorState): number {
   const rate = state.rateMmPerHr ?? 0;
 
@@ -43,8 +41,7 @@ function nextRainDelta(state: SensorState): number {
   return Math.max(0, deltaMm);
 }
 
-// SOIL_MOISTURE / WATER_LEVEL: absolute state, latest reading only —
-// this part of your original design was already correct.
+
 function nextAbsoluteValue(state: SensorState, min: number, max: number): number {
   const noise = (Math.random() - 0.5) * (state.baseline * 0.15);
   if (state.escalating) {

@@ -1,0 +1,44 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Node dependencies and artifacts
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+**/dist
+build
+**/build
+
+# Python artifacts
+__pycache__
+**/__pycache__
+*.pyc
+*.pyo
+*.pyd
+venv
+**/venv
+.venv
+**/.venv
+
+# Logs and environment files
+*.log
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.production.example
+
+# IDE / Editor
+.vscode
+.idea
+.claude
+.agents
+.windsurf
+
+# OS files
+.DS_Store
+Thumbs.db

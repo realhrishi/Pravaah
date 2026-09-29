@@ -1,0 +1,33 @@
+FROM oven/bun:1-alpine AS runner
+
+WORKDIR /app
+
+
+RUN apk add --no-cache openssl libc6-compat
+
+
+COPY package.json bun.lock* ./
+
+
+COPY packages/database/package.json ./packages/database/
+COPY packages/redis/package.json ./packages/redis/
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY apps/workers/package.json ./apps/workers/
+
+
+RUN bun install
+
+
+COPY packages/ ./packages/
+COPY apps/workers/ ./apps/workers/
+
+
+WORKDIR /app/packages/database
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/pravaah"
+RUN bunx prisma generate
+
+WORKDIR /app/apps/workers
+
+ENV NODE_ENV=production
+
+CMD ["bun", "run", "index.ts"]

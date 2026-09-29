@@ -1,0 +1,41 @@
+FROM oven/bun:1-alpine AS runner
+
+WORKDIR /app
+
+
+RUN apk add --no-cache openssl libc6-compat curl
+
+
+COPY package.json bun.lock* ./
+
+
+COPY packages/database/package.json ./packages/database/
+COPY packages/redis/package.json ./packages/redis/
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY apps/api/package.json ./apps/api/
+
+
+RUN bun install
+
+
+COPY packages/ ./packages/
+COPY apps/api/ ./apps/api/
+COPY scripts/gis-seed/data/ ./scripts/gis-seed/data/
+
+
+WORKDIR /app/packages/database
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/pravaah"
+RUN bunx prisma generate
+
+
+WORKDIR /app/apps/api
+
+EXPOSE 4000
+
+ENV PORT=4000
+ENV NODE_ENV=production
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:4000/health || exit 1
+
+CMD ["bun", "run", "index.ts"]
