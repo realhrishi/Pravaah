@@ -167,6 +167,14 @@ services:
             -out /etc/letsencrypt/live/pravaah.ashuttosh.me/fullchain.pem \
             -subj "/CN=localhost"
         fi
+        if [ ! -f /etc/letsencrypt/live/terravision.ashuttosh.me/fullchain.pem ]; then
+          mkdir -p /etc/letsencrypt/live/terravision.ashuttosh.me
+          which openssl >/dev/null 2>&1 || apk add --no-cache openssl
+          openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+            -keyout /etc/letsencrypt/live/terravision.ashuttosh.me/privkey.pem \
+            -out /etc/letsencrypt/live/terravision.ashuttosh.me/fullchain.pem \
+            -subj "/CN=localhost"
+        fi
         nginx -g "daemon off;"
       '
     depends_on:
@@ -219,4 +227,5 @@ volumes:
 
 networks:
   pravaah_net:
+    name: pravaah_net
     driver: bridge

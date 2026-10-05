@@ -1,13 +1,14 @@
 #!/bin/bash
 set -e
 
-# Domain configuration
-DOMAIN="pravaah.ashuttosh.me"
-EMAIL="${1:-admin@ashuttosh.me}"
+# Domain & Email configuration
+EMAIL="${1:-aashutoshsharma2905@gmail.com}"
+DOMAIN="${2:-pravaah.ashuttosh.me}"
 STAGING=0 # Set to 1 if testing to avoid hitting Let's Encrypt rate limits
 
-
-echo " PRAVAAH — Let's Encrypt SSL Initializer for $DOMAIN"
+echo "=================================================================="
+echo " Let's Encrypt SSL Initializer for $DOMAIN"
+echo "=================================================================="
 
 
 # Check if certificate already exists inside certbot_conf volume
